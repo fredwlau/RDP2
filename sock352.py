@@ -320,7 +320,7 @@ class socket:
 
             #sends syn packet through global socket to address provided
             global_socket.sendto(packsyn, (host, int(sendPort)))
-            print "Sending SYN to", address
+            #print "Sending SYN to", address LOOKATME
             try:
                 #sets timeout of .2 seconds, keep trying to send packet during this timeout
 
