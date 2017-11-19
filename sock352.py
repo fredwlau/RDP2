@@ -192,7 +192,7 @@ def readKeyChain(filename):
             print ( "error: opening keychain file: %s %s" % (filename,repr(e)))
     else:
             print ("error: No filename presented")             
-
+    print "keys are", publicKeys,privateKeys	
     return (publicKeys,privateKeys)
 
 class socket:
@@ -233,7 +233,7 @@ class socket:
             print ("Private keys : %s" % privateKeysHex[('*', '*')])
         #print "In Connect"
         #sets sequence and ack numbers to be referenced in the new syn packet
-        self.box = Box(privateKeys[('*', '*')], publicKeys[(host,recv_port)])
+        self.box = Box(privateKeys[('*', '*')], publicKeys[(host,receivePort)])
         print ("Box created for Host")
         self.nonce = nacl.utils.random(Box.NONCE_SIZE)
         
