@@ -315,7 +315,7 @@ class socket:
 
                 #returns packet size in rpacket
                 (rpacket, sender)=global_socket.recvfrom(headerLen)
-                print "Received ACK Packet"
+                print "Received ACK Packet", sender
                 break
             #fails if timeout exception
             except syssock.timeout:
@@ -323,11 +323,11 @@ class socket:
                 time.sleep(5)
             finally:
 
-                print "Syn Packet sent and ACK SYN packet received successfully"
                 #resets timer
                 global_socket.settimeout(None)
         #retrieves packet header of 'syn' packet, packet header is the first 40 bytes of the packet as denoted by [:40]
         #rec_packet=packHeader(rpacket[:40])
+        print "Syn Packet sent and ACK SYN packet received successfully"
         
         if(self.encrypt):
             rec_packet = packHeader(self.box.decrypt(rpacket))
@@ -366,12 +366,13 @@ class socket:
             try:
                 #sets timeout for receiving
                 global_socket.settimeout(.2)
+                print "timeout set"
                 (rpacket, sender)=global_socket.recvfrom(packet_size)
                 #rec_packet=packHeader(rpacket[:40])
                 print "Server accepting from...", sender
                 if(self.encrypt):
                     self.length_encrypted_header = len(rpacket)
-                    self.box = Box(privateKeys[('*', '*')], publicKeys[('localhost',send_port)])
+                    self.box = Box(privateKeys[('*', '*')], publicKeys[('localhost',send_port)])    #LOOKHERE
                     rpacket = self.box.decrypt(rpacket)
                     #print "Server PrivateKey: %s PublicKey: %s" %(privateKeysHex[('*', '*')], publicKeysHex[('localhost', recv_port)])
                     #print "Encrypted Server Creating Box"
