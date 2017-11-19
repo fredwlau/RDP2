@@ -141,8 +141,11 @@ class new_packet:
         self.header.sequence_no = seq_num
         
 def init(UDPportTx,UDPportRx):
-    global sock352portTx
-    global sock352portRx
+    global sendPort
+    global receivePort
+    
+    send=UDPportTx
+    receive=UDPportRx
     
     #init global socket for sending and receiving
     global global_socket
@@ -219,8 +222,12 @@ class socket:
             if (args[1] == ENCRYPT):
                 self.encrypt = True
                 
-        print "In Connect"
+        #print "In Connect"
         #sets sequence and ack numbers to be referenced in the new syn packet
+        self.box = Box(privateKeys[('*', '*')], publicKeys[(host,recv_port)])
+        print ("Box created for Host")
+        self.nonce = nacl.utils.random(Box.NONCE_SIZE)
+        
         self.init_seq=randint(0, 2**64)
         self.ack_no=0
         print "creating SYN Packet"
@@ -233,11 +240,18 @@ class socket:
         #packages the syn packet
         packsyn=syn.packPacket()
         
+        if(self.encrypt):
+            packsyn = self.box.encrypt(packsyn, self.nonce)
+            self.length_encrypted_header = len(packsyn)
+            #print "Length encrypted Header: ", len(packsyn)
+            headerLen = self.length_encrypted_header
+        
+        
         #send out the syn packet to setup connection
         while True:
 
             #sends syn packet through global socket to address provided
-            global_socket.sendto(packsyn, address)
+            global_socket.sendto(packsyn, (host, int(sendPort))
             print "Sending SYN to", address
             try:
                 #sets timeout of .2 seconds, keep trying to send packet during this timeout
@@ -246,7 +260,7 @@ class socket:
                 global_socket.settimeout(.2)
 
                 #returns packet size in rpacket
-                (rpacket, sender)=global_socket.recvfrom(packet_size)
+                (rpacket, sender)=global_socket.recvfrom(headerLen)
                 print "Received ACK Packet"
                 break
             #fails if timeout exception
@@ -259,8 +273,13 @@ class socket:
                 #resets timer
                 global_socket.settimeout(None)
         #retrieves packet header of 'syn' packet, packet header is the first 40 bytes of the packet as denoted by [:40]
-        rec_packet=packHeader(rpacket[:40])
+        #rec_packet=packHeader(rpacket[:40])
         
+        if(self.encrypt):
+            rec_packet = packHeader(self.box.decrypt(rpacket))
+        else:
+            rec_packet = packHeader(rpacket[:40])
+                                 
         print "Getting ACK SYN packet header"
         #checks flag to verify that it is indeed a SYN flag OR checks ack number to verify it is the sequence number +1 as denoted in class
         if (rec_packet.flags != 5 or rec_packet.ack_no != (syn.header.sequence_no + 1)):
@@ -294,8 +313,18 @@ class socket:
                 #sets timeout for receiving
                 global_socket.settimeout(.2)
                 (rpacket, sender)=global_socket.recvfrom(packet_size)
-                rec_packet=packHeader(rpacket[:40])
+                #rec_packet=packHeader(rpacket[:40])
                 print "Server accepting from...", sender
+                if(self.encrypt):
+                    self.length_encrypted_header = len(rpacket)
+                    self.box = Box(privateKeys[('*', '*')], publicKeys[('localhost',send_port)])
+                    rpacket = self.box.decrypt(rpacket)
+                    #print "Server PrivateKey: %s PublicKey: %s" %(privateKeysHex[('*', '*')], publicKeysHex[('localhost', recv_port)])
+                    #print "Encrypted Server Creating Box"
+                #print "Packet Read During Accept"
+                #print "Packet received... Packed Header is: ", binascii.hexlify(raw_packet)
+                rec_packet = packHeader(rpacket)
+                                 
                 if (rec_packet.flags != SYN_VAL):
                     print "Non connection flag"
                 else:
@@ -322,7 +351,12 @@ class socket:
         ack.header.ack_no=rec_packet.sequence_no+1
         #packages the ack packet
         packed_ack=ack.packPacket()
-
+        
+        #checks whether it is an encrypted connection, if it is, creates nonce
+        if(self.encrypt):
+			self.nonce = nacl.utils.random(Box.NONCE_SIZE)
+			packed_ack = self.box.encrypt(packed_ack, self.nonce)
+                                 
         #returns the number of bytes sent
         print "Sending ACK Packet back to client"
         bytes_s=global_socket.sendto(packed_ack, sender)
@@ -344,6 +378,9 @@ class socket:
         FIN = new_packet()
         FIN.header.flags = FIN_VAL
         packed_FIN = FIN.packPacket()
+        if(self.encrypt):
+             packed_FIN = self.box.encrypt(packed_FIN, self.nonce)
+                                 
         global_socket.sendto(packed_FIN, self.address)
         print "Closing socket"
         self.connected = False
@@ -381,6 +418,10 @@ class socket:
         print "Packaging payload packet"
         packed_data = data.packPacket()
         #count += count
+        if(self.encrypt):
+            self.nonce = nacl.utils.random(Box.NONCE_SIZE)
+            packed_data = self.box.encrypt(packed_data, self.nonce)
+                                 
         print "Sending payload packet"
         while True:
         
@@ -388,7 +429,15 @@ class socket:
 
             try:
                 global_socket.settimeout(.2)
-                (raw_packet, sender) = global_socket.recvfrom(HEADER_SIZE)
+                #(raw_packet, sender) = global_socket.recvfrom(HEADER_SIZE)
+                #rec_packet = packHeader(raw_packet)
+                if(self.encrypt):
+                    (raw_packet, sender) = global_socket.recvfrom(self.length_encrypted_header)
+                    rec_packet = self.box.decrypt(raw_packet)
+                else:
+                    #(rec_packet, sender) = global_socket.recvfrom(HEADER_SIZE)
+                    (raw_packet, sender) = global_socket.recvfrom(HEADER_SIZE)
+                    #rec_packet = packHeader(raw_packet)
                 rec_packet = packHeader(raw_packet)
                 print "Packet received..."
                 if (rec_packet.flags != ACK_VAL or rec_packet.ack_no != (data.header.sequence_no + 1)):
@@ -406,8 +455,20 @@ class socket:
         self.next_seq= rec_packet.ack_no 
         self.prev_ack = rec_packet.ack_no - 1
         self.next_ack = rec_packet.ack_no + 1
+        
+        if(self.encrypt):
+             headerLen = self.length_encrypted_header
+        else:
+             headerLen = HEADER_SIZE
+        
+        bytesSent = len(buffer)
 
-        return bytesSent - HEADER_SIZE 
+        if(len(buffer) > 4096):
+            bytesSent = 4096
+
+        
+        return bytesSent
+        #return bytesSent - HEADER_SIZE 
 
     def recv(self,nbytes):
         # your code goes here
@@ -417,7 +478,10 @@ class socket:
                 global_socket.settimeout(.2)
                 rPack, sender = global_socket.recvfrom(5000)
                 print "received packet"
-                rec_packet_header = packHeader(rPack[:40])
+                if (self.encrypt):
+                    rec_packet=self.box.decrypt(rPack)
+                                 
+                rec_packet_header = packHeader(rec_pack[:40])
                 print "getting packet header"
 
                 if (rec_packet_header.flags > 0):
@@ -446,6 +510,9 @@ class socket:
         ack.create_ack(rec_packet_header)
         packed_ack = ack.packPacket()
         print "sending ACK packet in recv"
+        
+        if(self.encrypt):
+            packed_ack = self.box.encrypt(packed_ack, self.nonce)
         global_socket.sendto(packed_ack, sender)
 
         return payload
