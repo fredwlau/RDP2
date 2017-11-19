@@ -183,13 +183,7 @@ def readKeyChain(filename):
                 # more than 2 words, and the first word does not have a
                 # hash, we may have a valid host/key pair in the keychain
                 if ( (len(words[0]) >= 4) and (words[0][0] != '#')):
-                    print "we got to this point"
-                    print "words[0]", words[0]
-                    print "words[0][0]", words[0][0]
-                    print "len(words)", len(words)
-                    print "len(words[0])", len(words[0])
-                    print ""
-
+                    
                     if (words[0][1] == 'r'):
                         #do private
                         host = '*'
@@ -205,7 +199,6 @@ def readKeyChain(filename):
                         print "kih", keyInHex
                     
                         privateKeysHex[(host,port)] = keyInHex
-                        keyInHex = keyInHex.strip()
                         privateKeys[(host,port)] = nacl.public.PrivateKey(keyInHex, nacl.encoding.HexEncoder)
 
 
@@ -240,13 +233,6 @@ def readKeyChain(filename):
                     else:
                         print "bad line"
                         continue
-                    #host = words[1]
-                    #port = words[2]
-                    #keyInHex = words[3]
-                    #if (words[0] == "private"):
-                    #    print "we got here"
-                    #elif (words[0] == "public"):
-                print "how did we get here?"
         except Exception,e:
             print ( "error: opening keychain file: %s %s" % (filename,repr(e)))
     else:
