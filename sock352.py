@@ -484,7 +484,7 @@ class socket:
 				global_socket.settimeout(.2)
 				rPack, sender = global_socket.recvfrom(5000)
 				print "received packet"
-				rec_packet=packHeader(rePack[40:])
+				rec_packet=packHeader(rPack[40:])
 				if (self.encrypt):
 					payload=self.box.decrypt(rec_packet)
 								 
