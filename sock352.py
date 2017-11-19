@@ -144,18 +144,18 @@ def init(UDPportTx,UDPportRx):
     global sendPort
     global receivePort
     
-    send=UDPportTx
-    receive=UDPportRx
+    sendPort=UDPportTx
+    receivePort=UDPportRx
     
     #init global socket for sending and receiving
     global global_socket
     global_socket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
     print "Global socket created"
 
-    if sock352portTx not in range(1, 65535):
+    if sendPort not in range(1, 65535):
         UDPportTx = 27182
 
-    if sock352portRx not in range(1, 65535):
+    if receivePort not in range(1, 65535):
         UDPportRx = 27182
     # create the sockets to send and receive UDP packets on 
     # if the ports are not equal, create two sockets, one for Tx and one for Rx
