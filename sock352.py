@@ -152,19 +152,6 @@ def init(UDPportTx,UDPportRx):
 	#init global socket for sending and receiving
 	global global_socket
 	global_socket = syssock.socket(syssock.AF_INET, syssock.SOCK_DGRAM)
-	print "Global socket created"
-
-	if sendPort not in range(1, 65535):
-		UDPportTx = 27182
-
-	if receivePort not in range(1, 65535):
-		UDPportRx = 27182
-
-	sendPort=UDPportTx
-	print(sendPort)
-	receivePort=UDPportRx
-	# create the sockets to send and receive UDP packets on 
-	# if the ports are not equal, create two sockets, one for Tx and one for Rx
 
 	
 # read the keyfile. The result should be a private key and a keychain of
