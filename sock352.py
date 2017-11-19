@@ -15,7 +15,7 @@ import time
 import nacl.utils
 import nacl.secret
 import nacl.utils
-from nacl.public import PrivateKey, Box
+from nacl.public import PublicKey, PrivateKey, Box
 
 # if you want to debug and print the current stack frame 
 from inspect import currentframe, getframeinfo
@@ -169,25 +169,83 @@ def readKeyChain(filename):
     global privateKeysHex 
     global publicKeys
     global privateKeys 
+    global keyInHex
+
     
     if (filename):
         try:
             keyfile_fd = open(filename,"r")
             for line in keyfile_fd:
+                #words = line.split(' ', 1)
                 words = line.split()
                 # check if a comment
                 # more than 2 words, and the first word does not have a
                 # hash, we may have a valid host/key pair in the keychain
-                if ( (len(words) >= 4) and (words[0].find("#") == -1)):
-                    host = words[1]
-                    port = words[2]
-                    keyInHex = words[3]
-                    if (words[0] == "private"):
+                if ( (len(words[0]) >= 4) and (words[0][0] != '#')):
+                    print "we got to this point"
+                    print "words[0]", words[0]
+                    print "words[0][0]", words[0][0]
+                    print "len(words)", len(words)
+                    print "len(words[0])", len(words[0])
+                    print ""
+
+                    if (words[0][1] == 'r'):
+                        #do private
+                        host = '*'
+                        port = '*'
+                        i = 8
+                        while (words[0][i] == ' ' or words[0][i] == '*'):
+                            i = i + 1
+                        keyInHex = words[0][(i): (len(words[0]))]
+                        while (keyInHex.isalnum() == False):
+                            i = i + 1
+                            keyInHex = words[0][(i): (len(words[0]))]
+                            
+                        print "kih", keyInHex
+                    
                         privateKeysHex[(host,port)] = keyInHex
+                        keyInHex = keyInHex.strip()
                         privateKeys[(host,port)] = nacl.public.PrivateKey(keyInHex, nacl.encoding.HexEncoder)
-                    elif (words[0] == "public"):
+
+
+                    elif (words[0][1] == 'u'):
+                        #do public
+                        i = 7
+                        while (words[0][i].isalnum() == False):
+                            i = i + 1
+                        j = i
+                        while (words[0][j].isalnum() or words[0][j] == '.'):
+                            j = j + 1
+                        host = words[0][(i): (j)]
+                        i = j
+                        while (words[0][i].isalnum() == False):
+                            i = i + 1
+                        j = i + 1
+                        while (words[0][j].isalnum() or words[0][j] == '.'):
+                            j = j + 1
+                        port = words[0][(i): (j)]
+                        print "host:", host
+                        print "port:", port
+                        i = j
+                        while (words[0][i].isalnum() == False):
+                            i = i + 1
+                        keyInHex = words[0][(i): (len(words[0]))]
+                       
+                        print "kih", keyInHex
+                    
                         publicKeysHex[(host,port)] = keyInHex
                         publicKeys[(host,port)] = nacl.public.PublicKey(keyInHex, nacl.encoding.HexEncoder)
+
+                    else:
+                        print "bad line"
+                        continue
+                    #host = words[1]
+                    #port = words[2]
+                    #keyInHex = words[3]
+                    #if (words[0] == "private"):
+                    #    print "we got here"
+                    #elif (words[0] == "public"):
+                print "how did we get here?"
         except Exception,e:
             print ( "error: opening keychain file: %s %s" % (filename,repr(e)))
     else:
