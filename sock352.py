@@ -414,17 +414,19 @@ class socket:
 		
 		data.header.ack_no = data.header.sequence_no+1
 		print "ack number", data.header.ack_no
-
+		if(self.encrypt):
+			self.nonce=nacl.utils.random(Box.NONCE_SIZE)
+			payload=self.box.encrypt(payload, self.nonce)
 		#assigns payload to the payload field of data packet
 		data.payload = payload
-
+		
 		#packages the data packet
 		print "Packaging payload packet"
 		packed_data = data.packPacket()
 		#count += count
-		if(self.encrypt):
+		'''if(self.encrypt):
 			self.nonce = nacl.utils.random(Box.NONCE_SIZE)
-			packed_data = self.box.encrypt(packed_data, self.nonce)
+			packed_data = self.box.encrypt(packed_data, self.nonce)'''
 								 
 		print "Sending payload packet"
 		while True:
@@ -460,10 +462,10 @@ class socket:
 		self.prev_ack = rec_packet.ack_no - 1
 		self.next_ack = rec_packet.ack_no + 1
 		
-		if(self.encrypt):
-			 headerLen = self.length_encrypted_header
-		else:
-			 headerLen = HEADER_SIZE
+		'''if(self.encrypt):
+			 headerLen = self.length_encrypted_header'''
+		#else:
+		headerLen = HEADER_SIZE
 		
 		bytesSent = len(buffer)
 
@@ -482,8 +484,9 @@ class socket:
 				global_socket.settimeout(.2)
 				rPack, sender = global_socket.recvfrom(5000)
 				print "received packet"
+				rec_packet=packHeader(rePack[40:])
 				if (self.encrypt):
-					rec_packet=self.box.decrypt(rPack)
+					payload=self.box.decrypt(rec_packet)
 								 
 				rec_packet_header = packHeader(rec_packet[:40])
 				print "getting packet header"
@@ -515,8 +518,8 @@ class socket:
 		packed_ack = ack.packPacket()
 		print "sending ACK packet in recv"
 		
-		if(self.encrypt):
-			packed_ack = self.box.encrypt(packed_ack, self.nonce)
+		'''if(self.encrypt):
+			packed_ack = self.box.encrypt(packed_ack, self.nonce)'''
 		global_socket.sendto(packed_ack, sender)
 
 		return payload
