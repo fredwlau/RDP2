@@ -292,7 +292,8 @@ class socket:
 		while True:
 
 			#sends syn packet through global socket to address provided
-			global_socket.sendto(packsyn, (host, int(sendPort)))
+			brec = global_socket.sendto(packsyn, (host, int(sendPort)))
+			print brec
 			#print "Sending SYN to", address LOOKATME
 			try:
 				#sets timeout of .2 seconds, keep trying to send packet during this timeout
