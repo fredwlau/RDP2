@@ -91,7 +91,7 @@ class packHeader:
 		if len(theHeader) < 40:
 			print ("Invalid Header")
 			return -1
-
+		print "hlen:", len(theHeader)
 		header_array = self.header_struct.unpack(theHeader)
 		self.version = header_array[0]
 		self.flags = header_array[1]
@@ -105,6 +105,7 @@ class packHeader:
 		self.ack_no = header_array[9]
 		self.window = header_array[10]
 		self.payload_len = header_array[11]
+		print "har", header_array
 		return header_array 
 
 #packet object
@@ -199,6 +200,7 @@ class socket:
 		self.next_ack=0
 		self.init_seq=0
 		self.next_seq=0
+		self.encrypt=False
 		return 
 		
 	def bind(self,address):
@@ -218,15 +220,15 @@ class socket:
 		global ENCRYPT
 		if (len(args) >= 1): 
 			(host,port) = args[0]
-		if (len(args) >= 2):
-			if (args[1] == ENCRYPT):
-				self.encrypt = True
+		#if (len(args) >= 2):
+		#	if (args[1] == ENCRYPT):
+		#		self.encrypt = True
 		
 		#print "In Connect"
 		#sets sequence and ack numbers to be referenced in the new syn packet
-		self.box = Box(privateKeys[('*', '*')], publicKeys[(host,receivePort)])
+		#self.box = Box(privateKeys[('*', '*')], publicKeys[(host,receivePort)])
 		print ("Box created for Host")
-		self.nonce = nacl.utils.random(Box.NONCE_SIZE)
+		#self.nonce = nacl.utils.random(Box.NONCE_SIZE)
 		
 		self.init_seq=randint(0, 2**64)
 		self.ack_no=0
@@ -240,16 +242,16 @@ class socket:
 		#packages the syn packet
 		packsyn=syn.packPacket()
 		
-		if(self.encrypt):
-			packsyn = self.box.encrypt(packsyn, self.nonce)
-			self.length_encrypted_header = len(packsyn)
-			#print "Length encrypted Header: ", len(packsyn)
-			headerLen = self.length_encrypted_header
+		#if(self.encrypt):
+		#	packsyn = self.box.encrypt(packsyn, self.nonce)
+		#	self.length_encrypted_header = len(packsyn)
+		#	#print "Length encrypted Header: ", len(packsyn)
+		#	headerLen = self.length_encrypted_header
 		
 		
 		#send out the syn packet to setup connection
 		while True:
-
+			print "sp:", sendPort
 			#sends syn packet through global socket to address provided
 			global_socket.sendto(packsyn, (host, int(sendPort)))
 			print("Sent packet")
@@ -261,7 +263,7 @@ class socket:
 				global_socket.settimeout(.2)
 
 				#returns packet size in rpacket
-				(rpacket, sender)=global_socket.recvfrom(headerLen)
+				(rpacket, sender)=global_socket.recvfrom(40)
 				print "Received ACK Packet", sender
 				break
 			#fails if timeout exception
@@ -276,10 +278,10 @@ class socket:
 		#rec_packet=packHeader(rpacket[:40])
 		print "Syn Packet sent and ACK SYN packet received successfully"
 		
-		if(self.encrypt):
-			rec_packet = packHeader(self.box.decrypt(rpacket))
-		else:
-			rec_packet = packHeader(rpacket[:40])
+		#if(self.encrypt):
+		#	rec_packet = packHeader(self.box.decrypt(rpacket))
+		#else:
+		rec_packet = packHeader(rpacket[:40])
 								 
 		print "Getting ACK SYN packet header"
 		#checks flag to verify that it is indeed a SYN flag OR checks ack number to verify it is the sequence number +1 as denoted in class
@@ -289,7 +291,7 @@ class socket:
 			print "Proper ACK for the SYN we sent"
 			#proper ACKSYN, connect set to true, seq numbers set to proper values
 			self.connected= True
-			self.address=address
+			self.address=sender
 			self.next_seq = rec_packet.ack_no
 			self.prev_ack = rec_packet.ack_no - 1
 			print "Connected"
@@ -317,16 +319,16 @@ class socket:
 				(rpacket, sender)=global_socket.recvfrom(packet_size)
 				#rec_packet=packHeader(rpacket[:40])
 				print "Server accepting from...", sender
-				if(self.encrypt):
-					self.length_encrypted_header = len(rpacket)
-					self.box = Box(privateKeys[('*', '*')], publicKeys[('localhost',send_port)])	#LOOKHERE
-					rpacket = self.box.decrypt(rpacket)
+				#if(self.encrypt):
+				#	self.length_encrypted_header = len(rpacket)
+				#	self.box = Box(privateKeys[('*', '*')], publicKeys[('localhost',send_port)])	#LOOKHERE
+				#	rpacket = self.box.decrypt(rpacket)
 					#print "Server PrivateKey: %s PublicKey: %s" %(privateKeysHex[('*', '*')], publicKeysHex[('localhost', recv_port)])
 					#print "Encrypted Server Creating Box"
 				#print "Packet Read During Accept"
 				#print "Packet received... Packed Header is: ", binascii.hexlify(raw_packet)
-				rec_packet = packHeader(rpacket)
-								 
+				rec_packet = packHeader(rpacket[:40])
+				
 				if (rec_packet.flags != SYN_VAL):
 					print "Non connection flag"
 				else:
@@ -483,7 +485,7 @@ class socket:
 				if (self.encrypt):
 					rec_packet=self.box.decrypt(rPack)
 								 
-				rec_packet_header = packHeader(rec_pack[:40])
+				rec_packet_header = packHeader(rec_packet[:40])
 				print "getting packet header"
 
 				if (rec_packet_header.flags > 0):
