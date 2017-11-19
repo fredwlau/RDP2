@@ -10,6 +10,7 @@ import socket as syssock
 import struct
 import sys
 import time
+from random import randint
 
 # encryption libraries 
 import nacl.utils
