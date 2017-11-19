@@ -9,6 +9,7 @@ import binascii
 import socket as syssock
 import struct
 import sys
+import time
 
 # encryption libraries 
 import nacl.utils
