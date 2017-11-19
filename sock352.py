@@ -213,7 +213,11 @@ class socket:
         return
 
     def connect(self,*args):
-
+	global publicKeysHex
+        global privateKeysHex 
+        global publicKeys
+        global privateKeys
+        global udpGlobalSocket 
         # example code to parse an argument list 
         global sock352portTx
         global ENCRYPT
