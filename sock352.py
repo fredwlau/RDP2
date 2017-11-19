@@ -229,7 +229,7 @@ class socket:
         
 	if (self.encrypt == True):
             print "This Connection is Encrypted"
-            print ("Connection's public key is: %s" % publicKeysHex[(host,recv_port)])
+            print ("Connection's public key is: %s" % publicKeysHex[(host,receivePort)])
             print ("Private keys : %s" % privateKeysHex[('*', '*')])
         #print "In Connect"
         #sets sequence and ack numbers to be referenced in the new syn packet
