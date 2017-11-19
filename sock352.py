@@ -262,7 +262,7 @@ class socket:
 		return
 
 	def connect(self,*args):
-	global publicKeysHex
+		global publicKeysHex
 		global privateKeysHex 
 		global publicKeys
 		global privateKeys
@@ -276,10 +276,6 @@ class socket:
 			if (args[1] == ENCRYPT):
 				self.encrypt = True
 		
-	if (self.encrypt == True):
-			print "This Connection is Encrypted"
-			print ("Connection's public key is: %s" % publicKeysHex[(host,receivePort)])
-			print ("Private keys : %s" % privateKeysHex[('*', '*')])
 		#print "In Connect"
 		#sets sequence and ack numbers to be referenced in the new syn packet
 		self.box = Box(privateKeys[('*', '*')], publicKeys[(host,receivePort)])
