@@ -484,11 +484,13 @@ class socket:
 				global_socket.settimeout(.2)
 				rPack, sender = global_socket.recvfrom(5000)
 				print "received packet"
-				rec_packet=packHeader(rPack[40:])
+				rec_packet_header = packHeader(rPack[:40])
+				payload=packHeader(rPack[40:])
+				
 				if (self.encrypt):
-					payload=self.box.decrypt(rec_packet)
+					payload=self.box.decrypt(payload)
 								 
-				rec_packet_header = packHeader(rec_packet[:40])
+				#rec_packet_header = packHeader(rec_packet[:40])
 				print "getting packet header"
 
 				if (rec_packet_header.flags > 0):
@@ -498,14 +500,16 @@ class socket:
 						break;
 
 				else:
+					print "Its a data packet!"
 					break
 
 			except syssock.timeout:
 				print "Socket timed out recieving"
 
 			finally:
-				print "Its a data packet!"
+				#print "Its a data packet!"
 				global_socket.settimeout(None)
+		#print "Its a data packet!"
 		self.next_seq = rec_packet_header.ack_no
 		self.prev_ack= rec_packet_header.ack_no - 1
 		self.next_ack = rec_packet_header.ack_no + 1
