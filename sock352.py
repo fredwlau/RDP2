@@ -159,6 +159,9 @@ def init(UDPportTx,UDPportRx):
 
     if receivePort not in range(1, 65535):
         UDPportRx = 27182
+
+    sendPort=UDPportTx
+    receivePort=UDPportRx
     # create the sockets to send and receive UDP packets on 
     # if the ports are not equal, create two sockets, one for Tx and one for Rx
 
