@@ -246,6 +246,7 @@ class socket:
 	def bind(self,address):
 		# bind is not used in this assignment
 		global_socket.bind(address)
+		print("bound to: ",  address)
 		return
 
 	def connect(self,*args):
@@ -292,7 +293,9 @@ class socket:
 		while True:
 
 			#sends syn packet through global socket to address provided
+			print((host, int(sendPort)))
 			global_socket.sendto(packsyn, (host, int(sendPort)))
+			print("Sent packet")
 			#print "Sending SYN to", address LOOKATME
 			try:
 				#sets timeout of .2 seconds, keep trying to send packet during this timeout
