@@ -217,16 +217,20 @@ class socket:
         global privateKeysHex 
         global publicKeys
         global privateKeys
-        global udpGlobalSocket 
+        #global udpGlobalSocket 
         # example code to parse an argument list 
-        global sock352portTx
+        #global sock352portTx
         global ENCRYPT
         if (len(args) >= 1): 
             (host,port) = args[0]
         if (len(args) >= 2):
             if (args[1] == ENCRYPT):
                 self.encrypt = True
-                
+        
+	if (self.encrypt == True):
+            print "This Connection is Encrypted"
+            print ("Connection's public key is: %s" % publicKeysHex[(host,recv_port)])
+            print ("Private keys : %s" % privateKeysHex[('*', '*')])
         #print "In Connect"
         #sets sequence and ack numbers to be referenced in the new syn packet
         self.box = Box(privateKeys[('*', '*')], publicKeys[(host,recv_port)])
