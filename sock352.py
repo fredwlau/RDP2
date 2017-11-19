@@ -46,7 +46,7 @@ privateKeys = {}
 ENCRYPT = 236 
 
 # this is the structure of the sock352 packet 
-sock352HdrStructStr = '!BBBBHHLLQQLL'
+HEADER_STRUCT = '!BBBBHHLLQQLL'
 HEADER_SIZE = struct.calcsize(HEADER_STRUCT)
 
 #set header flags
@@ -251,8 +251,8 @@ class socket:
         while True:
 
             #sends syn packet through global socket to address provided
-            global_socket.sendto(packsyn, (host, int(sendPort))
-            print "Sending SYN to", sendPort
+            global_socket.sendto(packsyn, (host, int(sendPort)))
+            print "Sending SYN to", address
             try:
                 #sets timeout of .2 seconds, keep trying to send packet during this timeout
 
