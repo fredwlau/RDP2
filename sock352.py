@@ -147,8 +147,8 @@ def init(UDPportTx,UDPportRx):
 	global sendPort
 	global receivePort
 	
-	sendPort=UDPportTx
-	receivePort=UDPportRx
+	sendPort=1111
+	receivePort=1111
 	
 	#init global socket for sending and receiving
 	global global_socket
