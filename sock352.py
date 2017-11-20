@@ -58,7 +58,7 @@ ACK_VAL = 0x4
 RESET_VAL = 0x8
 OPTION_VAL = 0xA0
 
-packet_size=5000
+packet_size=8192
 
 #header object for referencing
 class packHeader:
@@ -397,7 +397,7 @@ class socket:
 		#print "In send function"
 		bytessent = 0  # fill in your code here
 		#assigns the data in buffer up until the 5000th byte to payload
-		payload = buffer[:4098]
+		payload = buffer[:4096]
 		#creates new packet of type payload
 		#print "Creating payload packet"
 		data = new_packet()
@@ -479,7 +479,7 @@ class socket:
 		while True:
 			try:
 				global_socket.settimeout(.2)
-				rPack, sender = global_socket.recvfrom(5000)
+				rPack, sender = global_socket.recvfrom(8192)
 				print "received packet"
 				rec_packet_header = packHeader(rPack[:40])
 				payload=rPack[40:]
@@ -512,7 +512,6 @@ class socket:
 		self.next_ack = rec_packet_header.ack_no + 1
 	
 		#payload is now everything after the 40th byte of the received packet
-		payload = rPack[40:] #(40+bytessent)?
 		ack = new_packet()
 		print "creating ACK packet in recv"
 		ack.create_ack(rec_packet_header)
